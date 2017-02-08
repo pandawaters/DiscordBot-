@@ -101,4 +101,4 @@ async def elo(ctx,*,name:str):
                     kda=float((i["kills"]+i["assists"])/i["deaths"])
             await bot.say("{name}\nELO: {elo:0.0f}\nKDA: {kda:0.2f}\nRank: {rank}".format(name=name,elo=elo,kda=kda,rank=rank))
            
-bot.run("ENTER YOUR BOT TOKEN HERE BETWEEN THE QUOTES")
+bot.run("Mjc4NjE4MjMzMzg3NDgzMTQ3.C30Zdg.E9G0muCV0Ir_Yhe5G2ouUE2kv-Q")
