@@ -1,0 +1,104 @@
+from discord.ext import commands
+import random
+import aiohttp
+ 
+description="A bot written by Omninaut IX for the Paragon section of Marauder Clan"
+bot=commands.Bot(command_prefix="!")
+ 
+@bot.event
+async def on_ready():
+    print("Logged in as")
+    print(bot.user.name)
+    print(bot.user.id)
+    print("------------")
+ 
+@bot.command(pass_context=True)
+async def hello(ctx):
+    """Tests bot activity. Type '!hello' to get a response."""
+    await bot.say("Hello, {}!".format(ctx.message.author.mention))
+ 
+@bot.command()
+async def allnews():
+    await bot.say("https://www.epicgames.com/paragon/en-US/news")
+ 
+@bot.command(pass_context=True)
+async def news(ctx):
+    async with aiohttp.ClientSession() as client:
+        async with client.get('https://www.epicgames.com/paragon/api/blog/getPosts') as resp:
+            data1=await resp.json()
+            url=data1["blogList"][0]["url"]
+            await bot.say("https://www.epicgames.com/paragon{}".format(url))
+           
+@bot.command()
+async def patchnotes():
+    async with aiohttp.ClientSession() as client:
+        async with client.get('https://www.epicgames.com/paragon/api/blog/getPosts') as resp:
+            data1=await resp.json()
+            for i in data1["blogList"]:
+                if i["title"].startswith("V.")==True:
+                    url=i["url"]
+                    break
+            await bot.say("https://www.epicgames.com/paragon{}".format(url))
+ 
+@bot.command(pass_context=True)
+async def ARAM(ctx):
+    await bot.delete_message(ctx.message)
+    async with aiohttp.ClientSession() as client:
+        async with client.get('https://api.agora.gg/gamedata/heroes?lc=en&ssl=true') as resp2:
+            data3=await resp2.json()
+            await bot.say("{} heores found at agora.gg/heroes".format(len(data3["data"])))
+            heroes=[]
+            for i in data3["data"]:
+                heroes.append(i["name"])
+    chan=ctx.message.author.voice_channel
+    players=chan.voice_members.copy()
+    players=list(i.mention for i in players)
+    if len(players)>10:
+        await bot.say("Too many players in {}".format(chan))
+        return
+    if len(players)<10:
+        for i in range(len(players)+1,11):
+            players.append("Player {}".format(i))
+    hero10=random.sample(heroes,10)
+    team1=random.sample(players,5)
+    team2=[item for item in players if item not in team1]
+    bundle=[]
+    for i in team1:
+        bundle.append([i,hero10[players.index(i)]])
+    for i in team2:
+        bundle.append([i,hero10[players.index(i)]])
+    await bot.say(
+       "TEAM 1:\n"+
+       "{} - {}\n".format(bundle[0][0],bundle[0][1])+
+       "{} - {}\n".format(bundle[1][0],bundle[1][1])+
+       "{} - {}\n".format(bundle[2][0],bundle[2][1])+
+       "{} - {}\n".format(bundle[3][0],bundle[3][1])+
+       "{} - {}\n\n".format(bundle[4][0],bundle[4][1])+
+       "TEAM 2:\n"+
+       "{} - {}\n".format(bundle[5][0],bundle[5][1])+
+       "{} - {}\n".format(bundle[6][0],bundle[6][1])+
+       "{} - {}\n".format(bundle[7][0],bundle[7][1])+
+       "{} - {}\n".format(bundle[8][0],bundle[8][1])+
+       "{} - {}\n".format(bundle[9][0],bundle[9][1]))
+ 
+@bot.command(pass_context=True)
+async def elo(ctx,*,name:str):
+    await bot.delete_message(ctx.message)
+    async with aiohttp.ClientSession() as client:
+        async with client.get('https://api.agora.gg/players/search/{}?lc=en&ssl=true'.format(name)) as resp:
+            data1=await resp.json()
+            try: name=data1["data"][0]["name"]
+            except:
+                await bot.say("{} not found".format(name))
+                return
+            id1=data1["data"][0]["id"]
+        async with client.get("https://api.agora.gg/players/{}?season=2&lc=en&ssl=true".format(id1)) as final_resp:
+            data2=await final_resp.json()
+            for i in data2["data"]["stats"]:
+                if i["mode"]==4:
+                    elo=i["elo"]
+                    rank=i["rank"]
+                    kda=float((i["kills"]+i["assists"])/i["deaths"])
+            await bot.say("{name}\nELO: {elo:0.0f}\nKDA: {kda:0.2f}\nRank: {rank}".format(name=name,elo=elo,kda=kda,rank=rank))
+           
+bot.run("ENTER YOUR BOT TOKEN HERE BETWEEN THE QUOTES")
